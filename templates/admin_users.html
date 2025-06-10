@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ユーザー管理</title>
+  <meta name="viewport" content="width=600,initial-scale=1">
+  <style>
+    .notify-btn { margin-left: 6px; }
+    .vip-edit-select {
+      width: 70px;
+      font-size: 1em;
+      margin-right: 6px;
+    }
+    .vip-badge-inline {
+      width: 1.2em;
+      height: 1.2em;
+      vertical-align: middle;
+      margin-left: 3px;
+    }
+    .balance-edit-form {
+      display: inline-block;
+      margin-left: 8px;
+    }
+    .balance-input {
+      width: 75px;
+      font-size: 1em;
+      padding: 2px 4px;
+      border: 1px solid #b2d4ee;
+      border-radius: 5px;
+      margin-right: 2px;
+    }
+    .balance-btn {
+      background: #00b1e7;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 4px 9px;
+      font-size: 0.97em;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.14s;
+    }
+    .balance-btn:hover {
+      background: #1886ec;
+    }
+    #sendNotificationModal {
+      display: none;
+      position: fixed;
+      left: 0; top: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.15);
+      z-index: 1200;
+    }
+    #sendNotificationModal .modal-content {
+      background: #fff;
+      border-radius: 12px;
+      padding: 26px 22px 18px 22px;
+      max-width: 360px;
+      margin: 100px auto;
+      box-shadow: 0 4px 24px rgba(30,58,138,0.11);
+      position: relative;
+    }
+    #sendNotificationModal label {
+      font-weight: 700;
+      display: block;
+      margin-top: 10px;
+      margin-bottom: 3px;
+    }
+    #sendNotificationModal input[type="text"], #sendNotificationModal textarea {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #bfc8e2;
+      border-radius: 6px;
+      padding: 6px 8px;
+      margin-bottom: 8px;
+      font-size: 1em;
+      background: #f7faff;
+    }
+    #sendNotificationModal textarea { resize: vertical; min-height: 60px; }
+    #sendNotificationModal .modal-actions {
+      text-align: right;
+      margin-top: 12px;
+    }
+    #sendNotificationModal button {
+      padding: 5px 18px;
+      border-radius: 7px;
+      border: none;
+      background: #1886ec;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+    #sendNotificationModal button.cancel {
+      background: #b0b7c4;
+      color: #fff;
+    }
+    #sendNotificationModal .close-x {
+      position: absolute;
+      right: 14px;
+      top: 12px;
+      font-size: 1.3em;
+      color: #aaa;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #sendNotificationModal .modal-header {
+      margin-bottom: 8px;
+      font-weight: bold;
+      font-size: 1.09em;
+      color: #1886ec;
+    }
+  </style>
+</head>
+<body>
+  <h2>ユーザー一覧</h2>
+  <table border="1" style="width:100%;max-width:800px;">
+    <tr>
+      <th>ユーザーネーム</th>
+      <th>メール</th>
+      <th>VIP</th>
+      <th>残高</th>
+      <th>操作</th>
+    </tr>
+    {% for email, user in users.items() %}
+    <tr>
+      <td>
+        {{ user.username }}
+        <img src="/static/vip{{ user.vip_level|default(1)|int }}.png"
+             alt="VIP{{ user.vip_level|default(1)|int }}"
+             class="vip-badge-inline">
+      </td>
+      <td>{{ email }}</td>
+      <td>
+        <form action="{{ url_for('admin_users') }}" method="post" style="display:inline;">
+          <input type="hidden" name="email" value="{{ email }}">
+          <select name="vip_level" class="vip-edit-select">
+            {% for i in range(1, 5) %}
+            <option value="{{ i }}" {% if user.vip_level == i %}selected{% endif %}>VIP{{ i }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit">変更</button>
+        </form>
+      </td>
+      <td>
+        {{ user.balance or 0 }} 円
+        <form class="balance-edit-form" method="post" action="{{ url_for('admin_change_balance', email=email) }}">
+          <input type="number" name="balance_change" class="balance-input" placeholder="+1000 or -1000" required>
+          <button type="submit" class="balance-btn">残高変更</button>
+        </form>
+      </td>
+      <td>
+        <form action="{{ url_for('admin_delete_user', email=email) }}" method="post" style="display:inline;">
+          <button type="submit" onclick="return confirm('削除しますか？')">削除</button>
+        </form>
+        <form action="{{ url_for('admin_reset_password', email=email) }}" method="get" style="display:inline;">
+          <button type="submit">パスワードリセット</button>
+        </form>
+        <button type="button" class="notify-btn" onclick="openSendNotificationModal('{{ email|e }}', '{{ user.username|e }}')">通知送信</button>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <!-- 通知送信モーダル -->
+  <div id="sendNotificationModal">
+    <div class="modal-content">
+      <button class="close-x" onclick="closeSendNotificationModal()" aria-label="閉じる">&times;</button>
+      <div class="modal-header">ユーザーに通知送信</div>
+      <form id="sendNotificationForm">
+        <input type="hidden" name="email" id="notifyTargetEmail">
+        <div>
+          <label>宛先</label>
+          <div id="notifyTargetUsername" style="font-weight:bold;color:#164785;">---</div>
+        </div>
+        <div>
+          <label>タイトル</label>
+          <input type="text" name="title" maxlength="60" required>
+        </div>
+        <div>
+          <label>説明</label>
+          <textarea name="desc" rows="3" maxlength="200" required></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="submit">送信</button>
+          <button type="button" class="cancel" onclick="closeSendNotificationModal()">キャンセル</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script>
+    function openSendNotificationModal(email, username) {
+      document.getElementById('sendNotificationModal').style.display = 'block';
+      document.getElementById('notifyTargetEmail').value = email;
+      document.getElementById('notifyTargetUsername').innerText = username;
+      document.querySelector('#sendNotificationForm input[name="title"]').value = '';
+      document.querySelector('#sendNotificationForm textarea[name="desc"]').value = '';
+    }
+    function closeSendNotificationModal() {
+      document.getElementById('sendNotificationModal').style.display = 'none';
+    }
+    // 通知送信フォームの送信
+    document.getElementById('sendNotificationForm').onsubmit = function(e) {
+      e.preventDefault();
+      const form = e.target;
+      fetch('/admin/send_notification', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          email: form.email.value,
+          title: form.title.value,
+          desc: form.desc.value
+        })
+      }).then(async res => {
+        if(res.ok) {
+          alert('通知を送信しました');
+          closeSendNotificationModal();
+        } else {
+          const data = await res.json().catch(()=>null);
+          alert((data&&data.message)||'送信失敗');
+        }
+      });
+    };
+    // ESCキーでモーダルを閉じる
+    document.addEventListener('keydown', function(e){
+      if(e.key === "Escape") closeSendNotificationModal();
+    });
+    // モーダル外クリックでも閉じる
+    document.getElementById('sendNotificationModal').addEventListener('mousedown', function(e) {
+      if(e.target === this) closeSendNotificationModal();
+    });
+  </script>
+</body>
+</html>

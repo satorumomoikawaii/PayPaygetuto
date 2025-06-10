@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ユーザー追加</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body>
+  <h2>ユーザー追加</h2>
+  {% if error %}<div style="color:red;">{{ error }}</div>{% endif %}
+  <form method="post">
+    <label>ユーザーネーム</label>
+    <input type="text" name="username" required><br>
+    <label>メールアドレス</label>
+    <input type="email" name="email" required><br>
+    <label>パスワード</label>
+    <input type="text" name="password" required><br>
+    <button type="submit">登録</button>
+  </form>
+  <a href="{{ url_for('admin_users') }}">一覧に戻る</a>
+</body>
+</html>

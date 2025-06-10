@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>アンケート一覧</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="user-header-bar">
+    <a href="{{ url_for('mypage') }}" class="user-header-back" title="ホームに戻る" aria-label="ホームに戻る">＜</a>
+    <div class="user-header-title">アンケート一覧</div>
+  </div>
+  <div class="main-container survey-main-container">
+    <h2 class="survey-title">アンケート一覧</h2>
+    <div class="survey-list">
+      <div class="survey-question-card" id="open-survey-modal" tabindex="0" role="button" aria-label="アンケートを開く">
+        <div class="survey-question-category-row">
+          <span class="survey-question-category">ユーザー調査</span>
+        </div>
+        <div class="survey-question-title-row">
+          <span class="survey-question-title" title="もし大量にお金が貰えたら何に使いますか？">
+            もし大量にお金が貰えたら何に使いますか？
+          </span>
+          <span class="survey-question-arrow">＞</span>
+        </div>
+        <div class="survey-question-reward">
+          <span class="reward-icon">
+            <svg width="18" height="18" viewBox="0 0 18 18">
+              <circle cx="9" cy="9" r="8" fill="#fff3df" stroke="#ffb300" stroke-width="2"/>
+              <circle cx="9" cy="9" r="5.5" fill="#ffe082" stroke="#ffb300" stroke-width="1.2"/>
+              <text x="9" y="13.2" text-anchor="middle" font-size="9" font-weight="bold" fill="#ffb300" font-family="Arial">¥</text>
+            </svg>
+          </span>
+          <span class="reward-label">+10円</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ▼ ポップアップ・アンケートフォーム ▼ -->
+  <div class="survey-modal" id="survey-modal" style="display:none;">
+    <div class="survey-modal-content" id="survey-modal-content">
+      <button class="survey-modal-close" id="close-survey-modal" aria-label="閉じる">&times;</button>
+      <div class="survey-question-category-row" style="margin-top:10px;">
+        <span class="survey-question-category">ユーザー調査</span>
+      </div>
+      <div class="survey-question-title-row" style="margin-bottom:10px;">
+        <span class="survey-question-title" style="font-size:1.13em;" title="もし大量にお金が貰えたら何に使いますか？">
+          もし大量にお金が貰えたら何に使いますか？
+        </span>
+      </div>
+      <div class="survey-multi-note">※複数選択が可能です</div>
+      <form class="survey-form">
+        <fieldset class="survey-fieldset">
+          <legend class="survey-legend">使い道を選んでください</legend>
+          <label class="survey-option">
+            <input type="checkbox" name="money_usage" value="旅行・レジャー">
+            旅行・レジャー
+          </label>
+          <label class="survey-option">
+            <input type="checkbox" name="money_usage" value="貯金・資産運用">
+            貯金・資産運用
+          </label>
+          <label class="survey-option">
+            <input type="checkbox" name="money_usage" value="家や車など高額な買い物">
+            家や車など高額な買い物
+          </label>
+          <label class="survey-option">
+            <input type="checkbox" name="money_usage" value="趣味・自己投資">
+            趣味・自己投資
+          </label>
+          <label class="survey-option">
+            <input type="checkbox" name="money_usage" value="家族や友人へのプレゼント">
+            家族や友人へのプレゼント
+          </label>
+          <label class="survey-option">
+            <input type="checkbox" name="money_usage" value="寄付・社会貢献">
+            寄付・社会貢献
+          </label>
+          <label class="survey-option survey-option-other">
+            <input type="checkbox" name="money_usage" value="その他" id="other-checkbox">
+            その他
+            <input type="text" name="other_usage" class="survey-other-input" placeholder="具体的に入力してください" style="display:none;">
+          </label>
+        </fieldset>
+        <button type="submit" class="survey-submit-btn">回答する</button>
+      </form>
+    </div>
+  </div>
+  <!-- ▲ ポップアップここまで ▲ -->
+
+  <script>
+    // ポップアップ開閉＋アニメーション
+    document.getElementById('open-survey-modal').addEventListener('click', function() {
+      const modal = document.getElementById('survey-modal');
+      const modalContent = document.getElementById('survey-modal-content');
+      modal.style.display = 'flex';
+      // アニメーション初期化
+      modalContent.classList.remove('show-anim');
+      // 強制リフローで再描画
+      void modalContent.offsetWidth;
+      // アニメーションクラス付与
+      modalContent.classList.add('show-anim');
+    });
+    document.getElementById('close-survey-modal').addEventListener('click', function() {
+      document.getElementById('survey-modal').style.display = 'none';
+    });
+
+    // 「その他」チェック時にテキストボックス表示
+    document.addEventListener('DOMContentLoaded', function() {
+      const otherCheckbox = document.getElementById('other-checkbox');
+      const otherInput = document.querySelector('.survey-other-input');
+      if (otherCheckbox && otherInput) {
+        otherCheckbox.addEventListener('change', function() {
+          if (this.checked) {
+            otherInput.style.display = 'inline-block';
+            otherInput.focus();
+          } else {
+            otherInput.style.display = 'none';
+            otherInput.value = '';
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

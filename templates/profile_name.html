@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>プロフィール：本名と生年月日</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script>
+    function validateName(input) {
+      const value = input.value;
+      // 漢字とひらがなのみ許可
+      const regex = /^[\u3040-\u309F\u4E00-\u9FFF]+$/;
+      const nameWarning = document.getElementById('name-warning');
+      if (value && !regex.test(value)) {
+        nameWarning.style.display = 'block';
+      } else {
+        nameWarning.style.display = 'none';
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="main-container">
+    <h2>本名と生年月日を入力</h2>
+    <p style="color:#e4626a; font-weight: bold; margin-bottom: 16px;">
+      ※本名と生年月日は一度設定すると後から変更できません。慎重に入力してください。
+    </p>
+    <form method="post">
+      <label>本名</label>
+      <input type="text" name="name" required value="{{ name|default('') }}" oninput="validateName(this)">
+      <div id="name-warning" style="display:none; color:#e4626a; font-weight:600; margin-bottom:8px;">
+        本名は漢字とひらがなのみ利用できます
+      </div>
+      <label>生年月日</label>
+      <input type="date" name="birthday" required value="{{ birthday|default('') }}">
+      <button type="submit">次へ</button>
+    </form>
+  </div>
+</body>
+</html>

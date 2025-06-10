@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>リダイレクト中...</title>
+  <style>
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body {
+      width: 100vw; height: 100vh; min-height: 100vh;
+      margin: 0; background: #f7f7fa;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .center-box {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .loader {
+      border: 8px solid #eee;
+      border-top: 8px solid #3a7afe;
+      border-radius: 50%;
+      width: 60px; height: 60px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 18px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
+    .msg {
+      text-align: center; color: #444; font-size: 18px; font-family: "Segoe UI", "Yu Gothic", sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div class="center-box">
+    <div class="loader"></div>
+    <div class="msg">ログイン状態を確認しています...</div>
+  </div>
+  <form id="redirectForm" method="get" action="{{ redirect_url }}"></form>
+  <script>
+    setTimeout(function(){
+      document.getElementById('redirectForm').submit();
+    }, 1000);
+  </script>
+</body>
+</html>

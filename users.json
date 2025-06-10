@@ -1,0 +1,40 @@
+{
+  "a@a.a": {
+    "username": "a",
+    "email": "a@a.a",
+    "password": "b",
+    "profile_completed": true,
+    "name": "あ",
+    "birthday": "2000-05-27",
+    "device": "iPhone",
+    "balance": 300,
+    "vip_level": 1
+  },
+  "a@aa.a": {
+    "username": "akublv",
+    "email": "a@aa.a",
+    "password": "akublv",
+    "profile_completed": true,
+    "invite_code": "TeB7fuH5",
+    "name": "太田太",
+    "birthday": "2006-05-28",
+    "device": "iPhone",
+    "balance": 300,
+    "bonus_pending": false,
+    "bonus_wait_start": 1748396041,
+    "notifications": [
+      {
+        "title": "テスト",
+        "desc": "てすと",
+        "timestamp": 1748446665,
+        "unread": false
+      },
+      {
+        "title": "貴方の残高に300円が付与されました",
+        "desc": "招待キャンペーン",
+        "timestamp": 1748396200,
+        "unread": false
+      }
+    ]
+  }
+}

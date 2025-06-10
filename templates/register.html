@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>新規登録</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .input-error {
+      border: 2px solid #e4626a !important;
+      background: #fff0f2 !important;
+    }
+    .pw-toggle-btn {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      margin-left: 8px;
+    }
+    .pw-toggle-btn svg {
+      width: 1.5em;
+      height: 1.5em;
+      vertical-align: middle;
+      color: #888;
+    }
+
+    
+    
+
+    /* カスタムチェックボックス */
+    .custom-checkbox {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      margin: 16px 0 0 0;
+    }
+    .custom-checkbox input[type="checkbox"] {
+      display: none;
+    }
+    .custom-checkbox .checkmark {
+      width: 22px;
+      height: 22px;
+      border: 2px solid #bbb;
+      border-radius: 6px;
+      background: #fff;
+      margin-right: 10px;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .custom-checkbox input[type="checkbox"]:checked + .checkmark {
+      border-color: #1886ec;
+      background: #1886ec;
+    }
+    .custom-checkbox .checkmark svg {
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: #fff;
+      stroke-width: 3px;
+      display: none;
+      pointer-events: none;
+    }
+    .custom-checkbox input[type="checkbox"]:checked + .checkmark svg {
+      display: block;
+    }
+    .custom-checkbox .checkmark-error {
+      border-color: #e4626a !important;
+      background: #fff0f2 !important;
+    }
+    .custom-checkbox .terms-link {
+      color: #1886ec;
+      text-decoration: underline;
+      font-weight: bold;
+      cursor: pointer;
+      margin-left: 2px;
+    }
+    .agreement-error-message {
+      color: #e4626a;
+      font-weight: 600;
+      margin-top: 2px;
+      margin-bottom: 10px;
+      font-size: 1em;
+    }
+  </style>
+  <script>
+    function validateUsername(input) {
+      const value = input.value;
+      const regex = /^[a-zA-Z0-9]*$/;
+      const warning = document.getElementById('username-warning');
+      const lengthWarning = document.getElementById('username-length-warning');
+      if (value && !regex.test(value)) {
+        warning.style.display = 'block';
+      } else {
+        warning.style.display = 'none';
+      }
+      if (value.length > 0 && value.length <= 5) {
+        lengthWarning.style.display = 'block';
+      } else {
+        lengthWarning.style.display = 'none';
+      }
+    }
+    function validatePassword(input) {
+      const value = input.value;
+      const warning = document.getElementById('password-length-warning');
+      if (value.length > 0 && value.length <= 5) {
+        warning.style.display = 'block';
+      } else {
+        warning.style.display = 'none';
+      }
+    }
+    // 独自バリデーション
+    function validateRegisterForm(event) {
+      const username = document.getElementById('register-username');
+      const email = document.getElementById('register-email');
+      const password = document.getElementById('register-pw');
+      const inviteCode = document.getElementById('register-invite-code');
+      const agreement = document.getElementById('agreement-checkbox');
+      const agreementCheckmark = document.getElementById('agreement-checkmark');
+      const agreementError = document.getElementById('agreement-error-message');
+
+      [username, email, password, inviteCode].forEach(input => {
+        input.classList.remove('input-error');
+        if (!input.value.trim()) {
+          input.classList.add('input-error');
+        }
+      });
+
+      // 利用規約チェックのカスタムエラー
+      agreementCheckmark.classList.remove('checkmark-error');
+      agreementError.style.display = "none";
+      let agreementFail = false;
+      if (!agreement.checked) {
+        agreementCheckmark.classList.add('checkmark-error');
+        agreementError.style.display = "block";
+        agreementFail = true;
+      }
+
+      // 1つでも空欄があるか、規約未同意なら送信しない
+      if (![username, email, password, inviteCode].every(input => input.value.trim()) || agreementFail) {
+        event.preventDefault();
+      }
+    }
+    // パスワード表示切り替え
+    function togglePw(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const eyeOn = btn.querySelector('.pw-eye-on');
+      const eyeOff = btn.querySelector('.pw-eye-off');
+      if (input.type === "password") {
+        input.type = "text";
+        eyeOn.style.display = "none";
+        eyeOff.style.display = "inline";
+        input.focus();
+      } else {
+        input.type = "password";
+        eyeOn.style.display = "inline";
+        eyeOff.style.display = "none";
+        input.focus();
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="main-container">
+    <h2>新規登録</h2>
+    {% if error %}<div class="error-message">{{ error }}</div>{% endif %}
+    <form method="post" autocomplete="off" onsubmit="validateRegisterForm(event)">
+      <label>ユーザーネーム</label>
+      <input type="text" name="username" id="register-username" value="{{ username|default('') }}" oninput="validateUsername(this)">
+      <div id="username-warning" style="display:none; color:#e4626a; font-weight:600; margin-bottom:8px;">
+        ユーザーネームは英字と数字のみ利用できます
+      </div>
+      <div id="username-length-warning" style="display:none; color:#e4626a; font-weight:600; margin-bottom:8px;">
+        ユーザーネームは6文字以上で入力してください
+      </div>
+      <label>メールアドレス</label>
+      <input type="email" name="email" id="register-email" value="{{ email|default('') }}">
+      <label>パスワード</label>
+      <div class="pw-field" style="display:flex;align-items:center;">
+        <input type="password" name="password" id="register-pw" autocomplete="off" oninput="validatePassword(this)">
+        <span class="pw-toggle-btn" tabindex="0" role="button" aria-label="パスワード表示切替"
+          onclick="togglePw('register-pw', this)"
+          onmousedown="event.preventDefault();"
+          onkeydown="if(event.key===' '||event.key==='Enter'){togglePw('register-pw', this);}">
+          <span class="pw-eye-on">
+            <svg viewBox="0 0 24 24" fill="none">
+              <ellipse cx="12" cy="12" rx="10.5" ry="7.5" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+            </svg>
+          </span>
+          <span class="pw-eye-off" style="display:none;">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M2 12C3.73 7.61 7.97 4.5 12.5 4.5c4.53 0 8.77 3.11 10.5 7.5-1.73 4.39-5.97 7.5-10.5 7.5-4.53 0-8.77-3.11-10.5-7.5z" stroke="currentColor" stroke-width="2" />
+              <path d="M3 3l18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </span>
+        </span>
+      </div>
+      <div id="password-length-warning" style="display:none; color:#e4626a; font-weight:600; margin-bottom:8px;">
+        パスワードは6文字以上で入力してください
+      </div>
+      <label>招待コード <span style="color:#e4626a">*</span></label>
+      <input type="text" name="invite_code" id="register-invite-code" value="{{ invite_code|default('') }}">
+      {% if invite_code_error %}
+        <div class="error-message" style="color:#e4626a; font-weight:600; margin-bottom:8px;">
+          {{ invite_code_error }}
+        </div>
+      {% endif %}
+
+      <!-- 利用規約同意チェック -->
+      <label class="custom-checkbox" style="margin-top: 18px;">
+        <input type="checkbox" id="agreement-checkbox" name="agreement">
+        <span class="checkmark" id="agreement-checkmark">
+          <svg viewBox="0 0 22 22">
+            <polyline points="4,12 10,18 18,6" />
+          </svg>
+        </span>
+        <span>
+          <span>私は </span>
+          <a class="terms-link" href="{{ url_for('terms') }}" target="_blank">利用規約</a>
+          <span> に同意します</span>
+        </span>
+      </label>
+      <div id="agreement-error-message" class="agreement-error-message" style="display:none;">
+        利用規約に同意してください
+      </div>
+
+      <button type="submit">登録</button>
+    </form>
+    <p style="text-align:center; margin-top:16px;">
+      <a class="action-link" href="{{ url_for('login') }}">既にアカウントを持っている方はこちら</a>
+    </p>
+  </div>
+</body>
+</html>

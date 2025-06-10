@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ログイン</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script>
+    function togglePw(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const eyeOn = btn.querySelector('.pw-eye-on');
+      const eyeOff = btn.querySelector('.pw-eye-off');
+      if (input.type === "password") {
+        input.type = "text";
+        eyeOn.style.display = "none";
+        eyeOff.style.display = "inline";
+        input.focus();
+      } else {
+        input.type = "password";
+        eyeOn.style.display = "inline";
+        eyeOff.style.display = "none";
+        input.focus();
+      }
+    }
+    function showForgotPwPopup() {
+      document.getElementById('forgotpw-popup').style.display = 'block';
+    }
+    function closeForgotPwPopup() {
+      document.getElementById('forgotpw-popup').style.display = 'none';
+    }
+  </script>
+</head>
+<body>
+  <div class="main-container">
+    <h2>ログイン</h2>
+    {% if message %}
+    <div class="popup-message" id="popup-message">
+      <span>アカウントを作成しました</span>
+      <span class="popup-close" onclick="document.getElementById('popup-message').style.display='none';">&times;</span>
+    </div>
+    {% endif %}
+    {% if error %}<div class="error-message">{{ error }}</div>{% endif %}
+    <form method="post" autocomplete="off">
+      <label>メールアドレス or ユーザーネーム</label>
+      <input type="text" name="email" required>
+      <label>パスワード</label>
+      <div class="pw-field">
+        <input type="password" name="password" id="login-pw" required autocomplete="off">
+        <span class="pw-toggle-btn" tabindex="0" role="button" aria-label="パスワード表示切替"
+          onclick="togglePw('login-pw', this)"
+          onmousedown="event.preventDefault();"
+          onkeydown="if(event.key===' '||event.key==='Enter'){togglePw('login-pw', this);}">
+          <span class="pw-eye-on">
+            <svg viewBox="0 0 24 24" fill="none">
+              <ellipse cx="12" cy="12" rx="10.5" ry="7.5" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+            </svg>
+          </span>
+          <span class="pw-eye-off" style="display:none;">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M2 12C3.73 7.61 7.97 4.5 12.5 4.5c4.53 0 8.77 3.11 10.5 7.5-1.73 4.39-5.97 7.5-10.5 7.5-4.53 0-8.77-3.11-10.5-7.5z" stroke="currentColor" stroke-width="2" />
+              <path d="M3 3l18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </span>
+        </span>
+      </div>
+      <div style="margin-bottom:18px;">
+        <a href="javascript:void(0);" onclick="showForgotPwPopup();" style="color:#39a3f4;font-size:0.98rem;text-decoration:underline;">パスワードを忘れた場合</a>
+      </div>
+      <button type="submit">ログイン</button>
+    </form>
+    <p style="text-align:center; margin-top:16px;">
+      <a href="{{ url_for('register') }}">新規登録はこちら</a>
+    </p>
+  </div>
+  <!-- パスワード忘れたポップアップ -->
+  <div id="forgotpw-popup" class="custom-popup" style="display:none;">
+    <div class="custom-popup-inner">
+      <span class="custom-popup-close" onclick="closeForgotPwPopup();">&times;</span>
+      <div class="custom-popup-title">Q. パスワードを忘れてしまいました</div>
+      <div class="custom-popup-body">
+        A.パスワードを忘れた場合、受付係のLINEにて「パスワードを忘れた」云のご連絡をしてパスワードを教えてもらう、またはパスワードをリセットしてもらってください。
+      </div>
+    </div>
+  </div>
+</body>
+</html>

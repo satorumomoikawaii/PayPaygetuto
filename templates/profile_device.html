@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>プロフィール：端末選択</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="main-container">
+    <h2>使用端末を選択</h2>
+    <form method="post">
+      <div class="radio-group">
+        <label class="radio-label">
+          <input type="radio" name="device" value="iPhone" required
+            {% if device == "iPhone" %}checked{% endif %}> iPhone
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="device" value="iPad" required
+            {% if device == "iPad" %}checked{% endif %}> iPad
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="device" value="Android" required
+            {% if device == "Android" %}checked{% endif %}> Android
+        </label>
+      </div>
+      <div class="form-row">
+        <button type="submit">プロフィール作成完了</button>
+        <button type="submit" name="back" value="1" style="background:#b7d4f8;color:#333;">戻る</button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
