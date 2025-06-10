@@ -8,7 +8,15 @@
     "birthday": "2000-05-27",
     "device": "iPhone",
     "balance": 300,
-    "vip_level": 1
+    "vip_level": 1,
+    "notifications": [
+      {
+        "title": "アンケートの回答ありがとうございました！",
+        "desc": "残高付与までもう暫くお待ちください。",
+        "timestamp": 1749546254,
+        "unread": false
+      }
+    ]
   },
   "a@aa.a": {
     "username": "akublv",

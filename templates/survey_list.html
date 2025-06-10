@@ -5,7 +5,6 @@
   <title>アンケート一覧</title>
   <link rel="stylesheet" href="/static/style.css">
   <style>
-    /* バナー通知スタイル：スマホアプリの通知風・ふわっと上から降りる */
     .notification-banner {
       display: flex;
       align-items: center;
@@ -40,14 +39,18 @@
       display: flex;
       align-items: center;
     }
+
+    /* ここから下は既存のCSSやstyle.cssを活かしてOK */
   </style>
 </head>
 <body>
-  <!-- スマホバナー風通知 -->
+  <!-- 通知バナー -->
   <div class="notification-banner" id="notification-banner">
     <span class="notification-banner__icon">🎉</span>
     <span class="notification-banner__msg"></span>
   </div>
+
+  <!-- アンケート一覧の内容（例） -->
   <div class="user-header-bar">
     <a href="{{ url_for('mypage') }}" class="user-header-back" title="ホームに戻る" aria-label="ホームに戻る">＜</a>
     <div class="user-header-title">アンケート一覧</div>
@@ -133,7 +136,29 @@
   <!-- ▲ ポップアップここまで ▲ -->
 
   <script>
-    // ポップアップ開閉＋アニメーション
+    // ===== 通知バナー（クエリで判定） =====
+    function showNotificationBanner(message) {
+      const banner = document.getElementById('notification-banner');
+      const barMsg = banner.querySelector('.notification-banner__msg');
+      barMsg.textContent = message;
+      banner.classList.add('show');
+      setTimeout(() => {
+        banner.classList.remove('show');
+      }, 2000);
+    }
+    function getQueryParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+    window.addEventListener('DOMContentLoaded', function() {
+      // 通知バナー出す
+      if (getQueryParam('notified') === '1') {
+        showNotificationBanner('アンケートに回答しました！');
+        history.replaceState(null, '', window.location.pathname);
+      }
+    });
+
+    // ===== アンケート・モーダル開閉 =====
     document.getElementById('open-survey-modal').addEventListener('click', function() {
       const modal = document.getElementById('survey-modal');
       const modalContent = document.getElementById('survey-modal-content');
@@ -146,7 +171,7 @@
       document.getElementById('survey-modal').style.display = 'none';
     });
 
-    // 「その他」チェック時にテキストボックス表示
+    // ===== 「その他」チェック時のテキスト表示 =====
     document.addEventListener('DOMContentLoaded', function() {
       const otherCheckbox = document.getElementById('other-checkbox');
       const otherInput = document.querySelector('.survey-other-input');
@@ -160,30 +185,20 @@
             otherInput.value = '';
           }
         });
-      }
-
-      // 「その他」テキストボックスでエンター・確定時に5文字未満なら警告
-      if (otherInput) {
         otherInput.addEventListener('keydown', function(e) {
-          if (
-            (e.key === 'Enter' || e.keyCode === 13) &&
-            otherCheckbox.checked
-          ) {
+          if ((e.key === 'Enter' || e.keyCode === 13) && otherCheckbox.checked) {
             if (!otherInput.value || otherInput.value.trim().length < 5) {
               e.preventDefault();
               showOtherInputError();
             }
           }
         });
-        // モバイルでの「確定」ボタン（inputイベントで検出）
         otherInput.addEventListener('change', function(e) {
           if (otherCheckbox.checked && (!otherInput.value || otherInput.value.trim().length < 5)) {
             showOtherInputError();
           }
         });
       }
-
-      // エラー表示関数
       function showOtherInputError() {
         const errorDiv = document.querySelector('.form-error');
         errorDiv.textContent = '「その他」の内容は最低5文字以上入力してください。';
@@ -192,7 +207,7 @@
       }
     });
 
-    // ▼▼ 追加：アンケート未入力時エラー表示 ▼▼
+    // ===== 回答ボタンで一覧にもどる＋通知フラグ付与 =====
     document.querySelector('.survey-form').addEventListener('submit', function(e) {
       const checkboxes = document.querySelectorAll('input[name="money_usage"]:checked');
       const otherCheckbox = document.getElementById('other-checkbox');
@@ -210,7 +225,6 @@
         e.preventDefault();
         return;
       }
-      // 「その他」を選択している場合は5文字以上必須
       if (
         otherCheckbox.checked &&
         otherInput.value &&
@@ -222,31 +236,15 @@
         otherInput.focus();
         return;
       }
-
       errorDiv.style.display = 'none';
 
-      // ▼▼ アンケート送信時、通知バナー表示＋2秒後に一覧へ戻る ▼▼
-      e.preventDefault(); // テスト用：本番はアンケート送信処理後にリダイレクトする
-      showNotificationBanner("アンケートに回答しました！");
-      setTimeout(() => {
-        // 一覧ページへリダイレクト（今いるページを再読み込みならlocation.reload()でもOK）
-        window.location.href = window.location.pathname; // そのまま一覧に戻す
-      }, 2000);
+      // 回答ボタン押したら?notified=1付きで一覧ページに即戻す
+      e.preventDefault();
+      window.location.href = window.location.pathname + '?notified=1';
     });
-    // ▲▲ 追加ここまで ▲▲
 
-    // ▼▼ 通知バナー表示関数 ▼▼
-    function showNotificationBanner(message) {
-      const banner = document.getElementById('notification-banner');
-      const barMsg = banner.querySelector('.notification-banner__msg');
-      barMsg.textContent = message;
-      banner.classList.add('show');
-      setTimeout(() => {
-        banner.classList.remove('show');
-      }, 1800); // 2秒以内で消してリダイレクト
-    }
-    // ▲▲ 通知バナーここまで ▲▲
 
+  
   </script>
 </body>
 </html>
