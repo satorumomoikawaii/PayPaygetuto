@@ -400,6 +400,7 @@ def survey_list():
     user = ensure_vip_level(user)
     return render_template('survey_list.html', user=user)
 
+
 @app.route('/survey_answer', methods=['POST'])
 def survey_answer():
     if 'user' not in session:
@@ -409,9 +410,9 @@ def survey_answer():
     if not user:
         return jsonify({'ok': False, 'message': 'ユーザーが見つかりません'}), 404
 
-    # --- ここでアンケート回答内容を保存する処理を書く（今は省略） ---
+    # --- アンケート回答内容を保存（省略） ---
 
-    # 回答ありがとう通知を追加
+    # 回答ありがとう通知
     if 'notifications' not in user or not isinstance(user['notifications'], list):
         user['notifications'] = []
     user['notifications'].insert(0, {
@@ -422,7 +423,27 @@ def survey_answer():
     })
     users[session['user']] = user
     save_users(users)
-    return jsonify({'ok': True})
+
+    # 10秒後に残高+100円＆通知
+    def add_balance_later(email):
+        time.sleep(10)
+        users = load_users()
+        user = users.get(email)
+        if user:
+            user['balance'] = user.get('balance', 0) + 100
+            if 'notifications' not in user or not isinstance(user['notifications'], list):
+                user['notifications'] = []
+            user['notifications'].insert(0, {
+                'title': '残高付与：100円',
+                'desc': 'アンケート回答',
+                'timestamp': int(time.time()),
+                'unread': True
+            })
+            users[email] = user
+            save_users(users)
+
+    threading.Thread(target=add_balance_later, args=(session['user'],)).start()
+
     
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
