@@ -4,8 +4,50 @@
   <meta charset="UTF-8">
   <title>アンケート一覧</title>
   <link rel="stylesheet" href="/static/style.css">
+  <style>
+    /* バナー通知スタイル：スマホアプリの通知風・ふわっと上から降りる */
+    .notification-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 220px;
+      max-width: 92vw;
+      position: fixed;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(90deg, #38c6ff 0%, #2f80ed 100%);
+      color: #fff;
+      font-size: 1.06em;
+      font-weight: 600;
+      padding: 16px 28px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px 0 rgba(47,128,237,0.12);
+      z-index: 10000;
+      opacity: 0.97;
+      transition: top 0.42s cubic-bezier(.4,2,.4,1), opacity 0.35s;
+      pointer-events: none;
+      letter-spacing: 0.03em;
+    }
+    .notification-banner.show {
+      top: 24px;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .notification-banner__icon {
+      margin-right: 12px;
+      font-size: 1.32em;
+      display: flex;
+      align-items: center;
+    }
+  </style>
 </head>
 <body>
+  <!-- スマホバナー風通知 -->
+  <div class="notification-banner" id="notification-banner">
+    <span class="notification-banner__icon">🎉</span>
+    <span class="notification-banner__msg"></span>
+  </div>
   <div class="user-header-bar">
     <a href="{{ url_for('mypage') }}" class="user-header-back" title="ホームに戻る" aria-label="ホームに戻る">＜</a>
     <div class="user-header-title">アンケート一覧</div>
@@ -83,6 +125,7 @@
             <input type="text" name="other_usage" class="survey-other-input" placeholder="具体的に入力してください" style="display:none;">
           </label>
         </fieldset>
+        <div class="form-error" style="display:none; color: red; margin-bottom:8px;"></div>
         <button type="submit" class="survey-submit-btn">回答する</button>
       </form>
     </div>
@@ -95,11 +138,8 @@
       const modal = document.getElementById('survey-modal');
       const modalContent = document.getElementById('survey-modal-content');
       modal.style.display = 'flex';
-      // アニメーション初期化
       modalContent.classList.remove('show-anim');
-      // 強制リフローで再描画
       void modalContent.offsetWidth;
-      // アニメーションクラス付与
       modalContent.classList.add('show-anim');
     });
     document.getElementById('close-survey-modal').addEventListener('click', function() {
@@ -121,7 +161,92 @@
           }
         });
       }
+
+      // 「その他」テキストボックスでエンター・確定時に5文字未満なら警告
+      if (otherInput) {
+        otherInput.addEventListener('keydown', function(e) {
+          if (
+            (e.key === 'Enter' || e.keyCode === 13) &&
+            otherCheckbox.checked
+          ) {
+            if (!otherInput.value || otherInput.value.trim().length < 5) {
+              e.preventDefault();
+              showOtherInputError();
+            }
+          }
+        });
+        // モバイルでの「確定」ボタン（inputイベントで検出）
+        otherInput.addEventListener('change', function(e) {
+          if (otherCheckbox.checked && (!otherInput.value || otherInput.value.trim().length < 5)) {
+            showOtherInputError();
+          }
+        });
+      }
+
+      // エラー表示関数
+      function showOtherInputError() {
+        const errorDiv = document.querySelector('.form-error');
+        errorDiv.textContent = '「その他」の内容は最低5文字以上入力してください。';
+        errorDiv.style.display = 'block';
+        otherInput.focus();
+      }
     });
+
+    // ▼▼ 追加：アンケート未入力時エラー表示 ▼▼
+    document.querySelector('.survey-form').addEventListener('submit', function(e) {
+      const checkboxes = document.querySelectorAll('input[name="money_usage"]:checked');
+      const otherCheckbox = document.getElementById('other-checkbox');
+      const otherInput = document.querySelector('.survey-other-input');
+      const errorDiv = document.querySelector('.form-error');
+      let hasError = false;
+
+      if (
+        checkboxes.length === 0 ||
+        (otherCheckbox.checked && (!otherInput.value || !otherInput.value.trim()))
+      ) {
+        hasError = true;
+        errorDiv.textContent = '最低1つ以上選択してください。「その他」の場合は内容も入力してください。';
+        errorDiv.style.display = 'block';
+        e.preventDefault();
+        return;
+      }
+      // 「その他」を選択している場合は5文字以上必須
+      if (
+        otherCheckbox.checked &&
+        otherInput.value &&
+        otherInput.value.trim().length < 5
+      ) {
+        errorDiv.textContent = '「その他」の内容は最低5文字以上入力してください。';
+        errorDiv.style.display = 'block';
+        e.preventDefault();
+        otherInput.focus();
+        return;
+      }
+
+      errorDiv.style.display = 'none';
+
+      // ▼▼ アンケート送信時、通知バナー表示＋2秒後に一覧へ戻る ▼▼
+      e.preventDefault(); // テスト用：本番はアンケート送信処理後にリダイレクトする
+      showNotificationBanner("アンケートに回答しました！");
+      setTimeout(() => {
+        // 一覧ページへリダイレクト（今いるページを再読み込みならlocation.reload()でもOK）
+        window.location.href = window.location.pathname; // そのまま一覧に戻す
+      }, 2000);
+    });
+    // ▲▲ 追加ここまで ▲▲
+
+    // ▼▼ 通知バナー表示関数 ▼▼
+    function showNotificationBanner(message) {
+      const banner = document.getElementById('notification-banner');
+      const barMsg = banner.querySelector('.notification-banner__msg');
+      barMsg.textContent = message;
+      banner.classList.add('show');
+      setTimeout(() => {
+        banner.classList.remove('show');
+      }, 1800); // 2秒以内で消してリダイレクト
+    }
+    // ▲▲ 通知バナーここまで ▲▲
+
   </script>
 </body>
 </html>
