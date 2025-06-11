@@ -400,20 +400,18 @@ def survey_list():
     user = ensure_vip_level(user)
     return render_template('survey_list.html', user=user)
 
+# アンケート回答API
 @app.route('/survey_answer', methods=['POST'])
 def survey_answer():
     if 'user' not in session:
-        return jsonify({'ok': False, 'message': 'ログインしてください'}), 401
+        return jsonify({'ok': False}), 401
     users = load_users()
     user = users.get(session['user'])
     if not user:
-        return jsonify({'ok': False, 'message': 'ユーザーが見つかりません'}), 404
+        return jsonify({'ok': False}), 404
 
-    # --- ここでアンケート回答内容を保存する処理を書く（今は省略） ---
-
-    # 回答ありがとう通知を追加
-    if 'notifications' not in user or not isinstance(user['notifications'], list):
-        user['notifications'] = []
+    # 通知を追加
+    user.setdefault('notifications', [])
     user['notifications'].insert(0, {
         'title': 'アンケートの回答ありがとうございました！',
         'desc': '残高付与までもう暫くお待ちください。',

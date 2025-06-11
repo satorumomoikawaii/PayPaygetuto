@@ -151,7 +151,6 @@
       return params.get(name);
     }
     window.addEventListener('DOMContentLoaded', function() {
-      // 通知バナー出す
       if (getQueryParam('notified') === '1') {
         showNotificationBanner('アンケートに回答しました！');
         history.replaceState(null, '', window.location.pathname);
@@ -159,16 +158,21 @@
     });
 
     // ===== アンケート・モーダル開閉 =====
-    document.getElementById('open-survey-modal').addEventListener('click', function() {
-      const modal = document.getElementById('survey-modal');
-      const modalContent = document.getElementById('survey-modal-content');
-      modal.style.display = 'flex';
-      modalContent.classList.remove('show-anim');
-      void modalContent.offsetWidth;
-      modalContent.classList.add('show-anim');
-    });
-    document.getElementById('close-survey-modal').addEventListener('click', function() {
-      document.getElementById('survey-modal').style.display = 'none';
+    document.addEventListener('DOMContentLoaded', function() {
+      // open-survey-modalが複数ある場合にも対応
+      document.querySelectorAll('#open-survey-modal').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          const modal = document.getElementById('survey-modal');
+          const modalContent = document.getElementById('survey-modal-content');
+          modal.style.display = 'flex';
+          modalContent.classList.remove('show-anim');
+          void modalContent.offsetWidth;
+          modalContent.classList.add('show-anim');
+        });
+      });
+      document.getElementById('close-survey-modal').addEventListener('click', function() {
+        document.getElementById('survey-modal').style.display = 'none';
+      });
     });
 
     // ===== 「その他」チェック時のテキスト表示 =====
@@ -193,7 +197,7 @@
             }
           }
         });
-        otherInput.addEventListener('change', function(e) {
+        otherInput.addEventListener('change', function() {
           if (otherCheckbox.checked && (!otherInput.value || otherInput.value.trim().length < 5)) {
             showOtherInputError();
           }
@@ -207,44 +211,57 @@
       }
     });
 
-    // ===== 回答ボタンで一覧にもどる＋通知フラグ付与 =====
-    document.querySelector('.survey-form').addEventListener('submit', function(e) {
-      const checkboxes = document.querySelectorAll('input[name="money_usage"]:checked');
-      const otherCheckbox = document.getElementById('other-checkbox');
-      const otherInput = document.querySelector('.survey-other-input');
-      const errorDiv = document.querySelector('.form-error');
-      let hasError = false;
-
-      if (
-        checkboxes.length === 0 ||
-        (otherCheckbox.checked && (!otherInput.value || !otherInput.value.trim()))
-      ) {
-        hasError = true;
-        errorDiv.textContent = '最低1つ以上選択してください。「その他」の場合は内容も入力してください。';
-        errorDiv.style.display = 'block';
+    // ===== 回答ボタンでAPI送信＋通知バナー表示＋モーダル閉じ =====
+    document.addEventListener('DOMContentLoaded', function() {
+      const surveyForm = document.querySelector('.survey-form');
+      if (!surveyForm) return;
+      surveyForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        return;
-      }
-      if (
-        otherCheckbox.checked &&
-        otherInput.value &&
-        otherInput.value.trim().length < 5
-      ) {
-        errorDiv.textContent = '「その他」の内容は最低5文字以上入力してください。';
-        errorDiv.style.display = 'block';
-        e.preventDefault();
-        otherInput.focus();
-        return;
-      }
-      errorDiv.style.display = 'none';
+        const checkboxes = document.querySelectorAll('input[name="money_usage"]:checked');
+        const otherCheckbox = document.getElementById('other-checkbox');
+        const otherInput = document.querySelector('.survey-other-input');
+        const errorDiv = document.querySelector('.form-error');
 
-      // 回答ボタン押したら?notified=1付きで一覧ページに即戻す
-      e.preventDefault();
-      window.location.href = window.location.pathname + '?notified=1';
+        // バリデーション
+        if (
+          checkboxes.length === 0 ||
+          (otherCheckbox.checked && (!otherInput.value || !otherInput.value.trim()))
+        ) {
+          errorDiv.textContent = '最低1つ以上選択してください。「その他」の場合は内容も入力してください。';
+          errorDiv.style.display = 'block';
+          return;
+        }
+        if (
+          otherCheckbox.checked &&
+          otherInput.value &&
+          otherInput.value.trim().length < 5
+        ) {
+          errorDiv.textContent = '「その他」の内容は最低5文字以上入力してください。';
+          errorDiv.style.display = 'block';
+          otherInput.focus();
+          return;
+        }
+        errorDiv.style.display = 'none';
+
+        // API送信
+        const formData = new FormData(surveyForm);
+        fetch('/survey_answer', { method: 'POST', body: formData })
+          .then(res => res.json())
+          .then(data => {
+            if (data.ok) {
+              showNotificationBanner('アンケートに回答しました！');
+              document.getElementById('survey-modal').style.display = 'none';
+            } else {
+              errorDiv.textContent = '回答送信に失敗しました';
+              errorDiv.style.display = 'block';
+            }
+          })
+          .catch(() => {
+            errorDiv.textContent = '通信エラーが発生しました';
+            errorDiv.style.display = 'block';
+          });
+      });
     });
-
-
-  
   </script>
 </body>
 </html>
